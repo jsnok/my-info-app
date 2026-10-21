@@ -107,6 +107,29 @@
   body.editing .row { grid-template-columns: 30% 1fr auto; }
   body.editing .row-actions .mini-btn { width: 26px; font-size: 13px; }
   .cell.val.empty { white-space: nowrap; }
+
+  /* 계정(아이디/비밀번호) 줄 */
+  .acct { display: grid; grid-template-columns: 30% 1fr; border-bottom: 1px solid var(--line); }
+  .acct:last-child { border-bottom: 0; }
+  .acct .site { background: var(--cell); border-right: 1px solid var(--line); padding: 10px 12px;
+    display: flex; flex-direction: column; justify-content: center; gap: 6px; min-width: 0;
+    font-weight: 700; font-size: 14px; word-break: break-all; }
+  .acct .site.empty { color: #B4BAC8; font-weight: 400; font-style: italic; }
+  .acct .site input { width: 100%; border: 0; outline: 0; background: #fff; padding: 6px 8px; border-radius: 8px;
+    box-shadow: inset 0 0 0 2px var(--accent); font-size: 14px; font-weight: 700; }
+  .acct .site-btns { display: flex; gap: 2px; }
+  .acct .site-btns .mini-btn { width: 26px; height: 26px; font-size: 12px; }
+  .sub { display: grid; grid-template-columns: 58px 1fr auto; align-items: center; min-height: 46px; min-width: 0; }
+  .sub + .sub { border-top: 1px dashed var(--line); }
+  .sub .lbl { font-size: 11.5px; font-weight: 700; color: var(--accent); padding-left: 12px; }
+  .sub .lbl.pw { color: var(--accent-2); }
+  .sub .cell { padding: 10px 8px 10px 4px; }
+  .acct.hit .sub .cell { background: #FFF9DB; }
+
+  .type-pick { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .type-pick button { border-radius: 12px; background: var(--cell); padding: 12px 10px; text-align: left; font-weight: 700; font-size: 14px; }
+  .type-pick button small { display: block; font-weight: 400; color: var(--sub); font-size: 11.5px; margin-top: 2px; }
+  .type-pick button.sel { box-shadow: inset 0 0 0 2px var(--accent); background: var(--accent-soft); }
   .row.hit .cell.val { background: #FFF9DB; }
 
   .add-row { width: 100%; padding: 12px; color: var(--accent); font-weight: 600; font-size: 14px;
@@ -202,13 +225,14 @@
   const EMOJIS = ['🪪','🛂','📞','🏦','💳','🏠','🚗','🎓','💼','🏥','🔑','🌐','📧','✈️','📝','⭐'];
   const uid = () => Math.random().toString(36).slice(2, 10);
 
+  const newAccount = (key = '') => ({ id: uid(), key, user: '', value: '', secret: true });
+  const accountGroup = () => ({ id: uid(), name: '계정 정보', icon: '🔑', color: COLORS[5], type: 'account',
+    items: [newAccount('네이버'), newAccount('구글'), newAccount('카카오')] });
+
   const SAMPLE = () => ({
+    v: 2,
     groups: [
-      { id: uid(), name: '신분 정보', icon: '🪪', color: COLORS[0], items: [
-        { id: uid(), key: '이름', value: '', secret: false },
-        { id: uid(), key: '생년월일', value: '', secret: false },
-        { id: uid(), key: '주민등록번호', value: '', secret: true },
-      ]},
+      accountGroup(),
       { id: uid(), name: '여권', icon: '🛂', color: COLORS[4], items: [
         { id: uid(), key: '여권번호', value: '', secret: true },
         { id: uid(), key: '영문 이름', value: '', secret: false },
@@ -230,6 +254,13 @@
   let data;
   try { data = JSON.parse(localStorage.getItem(KEY)) || SAMPLE(); } catch { data = SAMPLE(); }
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch {} };
+
+  // 예전 버전 데이터 정리: 비어 있는 '신분 정보'는 지우고 '계정 정보' 추가 (내용이 있으면 지우지 않음)
+  if (!data.v || data.v < 2) {
+    data.groups = data.groups.filter(g => !(g.name === '신분 정보' && g.items.every(i => !i.value)));
+    if (!data.groups.some(g => g.type === 'account')) data.groups.unshift(accountGroup());
+    data.v = 2;
+  }
   save();
 
   const state = { edit: false, reveal: false, q: '', editing: null, filter: null, shown: new Set() };
@@ -250,6 +281,7 @@
     $('#stGroups').textContent = data.groups.length;
     $('#stItems').textContent = all.length;
     $('#stSecret').textContent = all.filter(i => i.secret).length;
+    const isAcct = g => g.type === 'account';
     $('#btnEdit').classList.toggle('on', state.edit);
     document.body.classList.toggle('editing', state.edit);
     $('#btnEye').classList.toggle('on', state.reveal);
@@ -263,7 +295,7 @@
     let html = '';
 
     for (const g of groups) {
-      const items = q ? g.items.filter(i => (i.key + ' ' + i.value + ' ' + g.name).toLowerCase().includes(q)) : g.items;
+      const items = q ? g.items.filter(i => (i.key + ' ' + (i.user || '') + ' ' + i.value + ' ' + g.name).toLowerCase().includes(q)) : g.items;
       if (q && !items.length) continue;
       const gi = data.groups.indexOf(g);
       html += `<section class="card" data-g="${g.id}">
@@ -271,7 +303,7 @@
           <button class="badge" style="background:${g.color}" data-act="group-edit">${g.icon}</button>
           <div class="card-title">
             <div class="name">${esc(g.name)}</div>
-            <div class="count">${g.items.length}개 항목</div>
+            <div class="count">${g.items.length}개 ${isAcct(g) ? '계정' : '항목'}</div>
           </div>
           ${state.edit ? `
             <button class="mini-btn" data-act="g-up" ${gi === 0 ? 'disabled style="opacity:.3"' : ''}>▲</button>
@@ -280,9 +312,9 @@
             `<button class="mini-btn" data-act="group-edit" title="분류 수정">✎</button>`}
         </div>
         <div class="sheet">
-          ${items.map((it, idx) => rowHTML(g, it, idx, items.length, q)).join('')}
+          ${items.map((it, idx) => (isAcct(g) ? acctHTML : rowHTML)(g, it, idx, items.length, q)).join('')}
         </div>
-        ${q ? '' : `<button class="add-row" data-act="add">＋ 항목 추가</button>`}
+        ${q ? '' : `<button class="add-row" data-act="add">＋ ${isAcct(g) ? '계정 추가' : '항목 추가'}</button>`}
       </section>`;
     }
 
@@ -292,7 +324,7 @@
         : `<div class="empty-state"><div class="big">🗂️</div><p>아직 분류가 없어요.<br>아래 버튼으로 첫 분류를 만들어 보세요.</p></div>`;
     }
     if (!q && !state.filter) {
-      html += `<div class="tip">💡 <b>칸을 탭</b>하면 바로 수정돼요. 값 오른쪽 <b>📋</b>로 복사, <b>✎ 편집 모드</b>에서 순서 변경·삭제·가리기(🔒)를 설정할 수 있어요. 데이터는 <b>이 휴대폰에만</b> 저장됩니다.</div>`;
+      html += `<div class="tip">💡 <b>칸을 탭</b>하면 바로 수정돼요. 계정은 사이트 → 아이디 → 비밀번호 순서로 Enter를 누르면 다음 칸으로 넘어가요. 값 오른쪽 <b>📋</b>로 복사, <b>✎ 편집 모드</b>에서 순서 변경·삭제·가리기(🔒)를 설정할 수 있어요. 데이터는 <b>이 휴대폰에만</b> 저장됩니다.</div>`;
     }
     $('#list').innerHTML = html;
 
@@ -336,6 +368,46 @@
     </div>`;
   }
 
+  // 계정 한 줄: [사이트] | 아이디 / 비밀번호
+  function acctHTML(g, it, idx, len, q) {
+    const ed = state.editing;
+    const isEd = f => ed && ed.item === it.id && ed.field === f;
+    const visible = state.reveal || state.shown.has(it.id);
+    const hit = q && (it.key + (it.user || '') + it.value).toLowerCase().includes(q);
+    const inp = (f, v, ph, hint) => `<input data-editing data-field="${f}" value="${esc(v || '')}" placeholder="${ph}"
+      autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="${hint}">`;
+
+    const site = isEd('key') ? inp('key', it.key, '사이트 이름', 'next') : (it.key ? esc(it.key) : '사이트 이름');
+    const siteBtns = state.edit ? `<div class="site-btns">
+        <button class="mini-btn" data-act="up" ${idx === 0 ? 'disabled style="opacity:.3"' : ''}>▲</button>
+        <button class="mini-btn" data-act="down" ${idx === len - 1 ? 'disabled style="opacity:.3"' : ''}>▼</button>
+        <button class="mini-btn danger" data-act="del">✕</button></div>` : '';
+
+    let user, userCls = 'cell val';
+    if (isEd('user')) user = inp('user', it.user, '아이디', 'next');
+    else if (!it.user) { user = '입력'; userCls += ' empty'; }
+    else user = esc(it.user);
+
+    let pw, pwCls = 'cell val';
+    if (isEd('value')) pw = inp('value', it.value, '비밀번호', 'done');
+    else if (!it.value) { pw = '입력'; pwCls += ' empty'; }
+    else if (!visible) { pw = '•'.repeat(8); pwCls += ' masked'; }
+    else pw = esc(it.value);
+
+    const userBtns = !state.edit && it.user ? `<button class="mini-btn" data-act="copy" data-f="user">📋</button>` : '';
+    const pwBtns = !state.edit && it.value ? `
+      ${state.reveal ? '' : `<button class="mini-btn" data-act="peek">${visible ? '🙈' : '👁'}</button>`}
+      <button class="mini-btn" data-act="copy" data-f="value">📋</button>` : '';
+
+    return `<div class="acct ${hit ? 'hit' : ''}" data-i="${it.id}">
+      <div class="site ${!it.key && !isEd('key') ? 'empty' : ''}" data-act="edit-key">${site}${siteBtns}</div>
+      <div>
+        <div class="sub"><span class="lbl">아이디</span><div class="${userCls}" data-act="edit-user">${user}</div><div class="row-actions">${userBtns}</div></div>
+        <div class="sub"><span class="lbl pw">비밀번호</span><div class="${pwCls}" data-act="edit-val">${pw}</div><div class="row-actions">${pwBtns}</div></div>
+      </div>
+    </div>`;
+  }
+
   // ---------- 셀 편집 ----------
   function commitEditing() {
     const inp = $('#list input[data-editing]');
@@ -356,7 +428,10 @@
     if (!inp || e.key !== 'Enter') return;
     e.preventDefault();
     const { group, item, field } = state.editing;
-    if (field === 'key') startEdit(group, item, 'value');   // 엑셀처럼 옆 칸으로
+    const acct = findGroup(group)?.type === 'account';
+    // 엑셀처럼 다음 칸으로: (사이트 →) 아이디 → 비밀번호
+    if (field === 'key') startEdit(group, item, acct ? 'user' : 'value');
+    else if (field === 'user') startEdit(group, item, 'value');
     else stopEdit();
   });
   $('#list').addEventListener('focusout', e => {
@@ -378,15 +453,18 @@
 
     if (act === 'edit-key') return startEdit(g.id, it.id, 'key');
     if (act === 'edit-val') return startEdit(g.id, it.id, 'value');
+    if (act === 'edit-user') return startEdit(g.id, it.id, 'user');
     commitEditing(); state.editing = null;
 
     if (act === 'add') {
-      const n = { id: uid(), key: '', value: '', secret: false };
+      const n = g.type === 'account' ? newAccount() : { id: uid(), key: '', value: '', secret: false };
       g.items.push(n); save();
       return startEdit(g.id, n.id, 'key');
     }
     if (act === 'copy') {
-      try { await navigator.clipboard.writeText(it.value); toast(`“${it.key || '항목'}” 복사됨`); }
+      const f = el.dataset.f || 'value';
+      const label = g.type === 'account' ? `${it.key || '계정'} ${f === 'user' ? '아이디' : '비밀번호'}` : (it.key || '항목');
+      try { await navigator.clipboard.writeText(it[f]); toast(`“${label}” 복사됨`); }
       catch { toast('복사에 실패했어요'); }
       return;
     }
@@ -436,11 +514,27 @@
 
   function openGroupPanel(g) {
     let icon = g ? g.icon : EMOJIS[0];
+    let type = 'normal';
     openPanel(`
       <h3>${g ? '분류 수정' : '새 분류 만들기'}</h3>
+      ${g ? '' : `<div class="type-pick">
+        <button data-type="normal" class="sel">📝 일반<small>항목 : 내용</small></button>
+        <button data-type="account">🔑 계정<small>사이트 · 아이디 · 비밀번호</small></button>
+      </div>`}
       <input class="field" id="gName" placeholder="분류 이름 (예: 운전면허)" value="${g ? esc(g.name) : ''}">
       <div class="emoji-grid">${EMOJIS.map(em => `<button data-em="${em}" class="${em === icon ? 'sel' : ''}">${em}</button>`).join('')}</div>
       <button class="primary" id="gSave">${g ? '저장' : '만들기'}</button>`);
+    const tp = panel.querySelector('.type-pick');
+    if (tp) tp.onclick = e => {
+      const b = e.target.closest('[data-type]'); if (!b) return;
+      type = b.dataset.type;
+      tp.querySelectorAll('[data-type]').forEach(x => x.classList.toggle('sel', x === b));
+      if (type === 'account') {
+        icon = '🔑';
+        panel.querySelectorAll('[data-em]').forEach(x => x.classList.toggle('sel', x.dataset.em === icon));
+        $('#gName').placeholder = '분류 이름 (예: 학교 계정)';
+      }
+    };
     panel.querySelector('.emoji-grid').onclick = e => {
       const b = e.target.closest('[data-em]'); if (!b) return;
       icon = b.dataset.em;
@@ -449,8 +543,9 @@
     $('#gSave').onclick = () => {
       const name = $('#gName').value.trim() || '새 분류';
       if (g) { g.name = name; g.icon = icon; }
-      else data.groups.push({ id: uid(), name, icon, color: COLORS[data.groups.length % COLORS.length],
-        items: [{ id: uid(), key: '', value: '', secret: false }] });
+      else data.groups.push(type === 'account'
+        ? { id: uid(), name, icon, color: COLORS[data.groups.length % COLORS.length], type: 'account', items: [newAccount()] }
+        : { id: uid(), name, icon, color: COLORS[data.groups.length % COLORS.length], items: [{ id: uid(), key: '', value: '', secret: false }] });
       save(); closePanel(); render();
       if (!g) setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 50);
     };
