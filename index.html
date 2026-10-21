@@ -3,29 +3,29 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#5B6CF0">
+<meta name="theme-color" content="#15925F">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="내 정보">
-<title>내 정보 노트</title>
+<meta name="apple-mobile-web-app-title" content="비밀 노트">
+<title>비밀 노트</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
   :root {
-    --bg: #F3F5FB;
+    --bg: #F1F6F3;
     --card: #FFFFFF;
-    --ink: #1F2433;
+    --ink: #1B2A23;
     --sub: #6B7280;
-    --line: #E6E9F2;
-    --cell: #F8F9FD;
-    --accent: #5B6CF0;
-    --accent-2: #8B5CF6;
-    --accent-soft: #EEF0FE;
+    --line: #E1EBE5;
+    --cell: #F5FAF7;
+    --accent: #15925F;
+    --accent-2: #14A39A;
+    --accent-soft: #E3F5EC;
     --danger: #EF4444;
     --ok: #10B981;
     --radius: 18px;
-    --shadow: 0 2px 10px rgba(31, 36, 51, .06), 0 1px 2px rgba(31, 36, 51, .04);
+    --shadow: 0 2px 10px rgba(27, 42, 35, .06), 0 1px 2px rgba(27, 42, 35, .04);
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; background: var(--bg); color: var(--ink);
@@ -64,7 +64,7 @@
   .search {
     display: flex; align-items: center; gap: 10px;
     background: var(--card); border-radius: 16px; padding: 0 16px; height: 52px;
-    box-shadow: 0 6px 20px rgba(91,108,240,.15);
+    box-shadow: 0 6px 20px rgba(21,146,95,.16);
   }
   .search input { flex: 1; border: 0; outline: 0; background: none; font-size: 15px; }
   .search .muted { color: var(--sub); }
@@ -97,7 +97,7 @@
   .cell { padding: 12px 12px; display: flex; align-items: center; min-width: 0; word-break: break-all; }
   .cell.key { background: var(--cell); color: var(--sub); font-size: 13.5px; font-weight: 600; border-right: 1px solid var(--line); }
   .cell.val { font-size: 15px; font-weight: 500; }
-  .cell.val.empty, .cell.key.empty { color: #B4BAC8; font-weight: 400; font-style: italic; }
+  .cell.val.empty, .cell.key.empty { color: #AEBDB4; font-weight: 400; font-style: italic; }
   .cell.val.masked { letter-spacing: 2px; color: var(--ink); }
   .cell input { width: 100%; border: 0; outline: 0; background: #fff; padding: 6px 8px; border-radius: 8px;
     box-shadow: inset 0 0 0 2px var(--accent); font-size: 15px; }
@@ -114,7 +114,7 @@
   .acct .site { background: var(--cell); border-right: 1px solid var(--line); padding: 10px 12px;
     display: flex; flex-direction: column; justify-content: center; gap: 6px; min-width: 0;
     font-weight: 700; font-size: 14px; word-break: break-all; }
-  .acct .site.empty { color: #B4BAC8; font-weight: 400; font-style: italic; }
+  .acct .site.empty { color: #AEBDB4; font-weight: 400; font-style: italic; }
   .acct .site input { width: 100%; border: 0; outline: 0; background: #fff; padding: 6px 8px; border-radius: 8px;
     box-shadow: inset 0 0 0 2px var(--accent); font-size: 14px; font-weight: 700; }
   .acct .site-btns { display: flex; gap: 2px; }
@@ -147,7 +147,7 @@
     position: fixed; left: 50%; transform: translateX(-50%);
     bottom: calc(20px + env(safe-area-inset-bottom));
     background: var(--ink); color: #fff; border-radius: 999px; padding: 15px 24px;
-    font-weight: 700; box-shadow: 0 10px 24px rgba(31,36,51,.25); display: flex; gap: 8px; align-items: center;
+    font-weight: 700; box-shadow: 0 10px 24px rgba(27,42,35,.25); display: flex; gap: 8px; align-items: center;
     z-index: 10;
   }
 
@@ -187,7 +187,7 @@
   <div class="top">
     <div>
       <p class="hello" id="hello">안녕하세요 👋</p>
-      <h1>내 정보 노트</h1>
+      <h1>비밀 노트</h1>
     </div>
     <div class="top-btns">
       <button class="icon-btn" id="btnEye" title="모두 보기/가리기" aria-label="민감정보 보기">👁</button>
@@ -221,45 +221,55 @@
 <script>
 (() => {
   const KEY = 'myinfo.v1';
-  const COLORS = ['#EEF0FE', '#E7F8F1', '#FFF3E4', '#FDECEF', '#E8F4FD', '#F3EDFE', '#FFF9DB', '#EAF7E9'];
-  const EMOJIS = ['🪪','🛂','📞','🏦','💳','🏠','🚗','🎓','💼','🏥','🔑','🌐','📧','✈️','📝','⭐'];
+  // 녹색 계열 배지 색
+  const COLORS = ['#E3F5EC', '#DDF3EF', '#EDF7DF', '#E6F2F7', '#F1F6E4', '#E0F2E9', '#EAF5F1', '#F3F8EC'];
+  const EMOJIS = ['🔑','🛂','🎫','🪪','📜','💳','🏦','📞','🏠','🚗','🎓','💼','🏥','🌐','📧','⭐'];
   const uid = () => Math.random().toString(36).slice(2, 10);
+  const item = (key, secret = false) => ({ id: uid(), key, value: '', secret });
 
   const newAccount = (key = '') => ({ id: uid(), key, user: '', value: '', secret: true });
-  const accountGroup = () => ({ id: uid(), name: '계정 정보', icon: '🔑', color: COLORS[5], type: 'account',
+  const accountGroup = () => ({ id: uid(), name: '계정 정보', icon: '🔑', color: COLORS[0], type: 'account',
     items: [newAccount('네이버'), newAccount('구글'), newAccount('카카오')] });
 
-  const SAMPLE = () => ({
-    v: 2,
-    groups: [
-      accountGroup(),
-      { id: uid(), name: '여권', icon: '🛂', color: COLORS[4], items: [
-        { id: uid(), key: '여권번호', value: '', secret: true },
-        { id: uid(), key: '영문 이름', value: '', secret: false },
-        { id: uid(), key: '만료일', value: '', secret: false },
-      ]},
-      { id: uid(), name: '연락처', icon: '📞', color: COLORS[1], items: [
-        { id: uid(), key: '휴대폰', value: '', secret: false },
-        { id: uid(), key: '이메일', value: '', secret: false },
-        { id: uid(), key: '주소', value: '', secret: false },
-      ]},
-      { id: uid(), name: '계좌', icon: '🏦', color: COLORS[2], items: [
-        { id: uid(), key: '은행', value: '', secret: false },
-        { id: uid(), key: '계좌번호', value: '', secret: true },
-      ]},
-    ]
-  });
+  // 기본 분류 5개 (이 순서대로)
+  const DEFAULTS = {
+    '여권': () => ({ id: uid(), name: '여권', icon: '🛂', color: COLORS[1],
+      items: [item('여권번호', true), item('영문 이름'), item('발급일'), item('만료일')] }),
+    '멤버쉽': () => ({ id: uid(), name: '멤버쉽', icon: '🎫', color: COLORS[2],
+      items: [item('CJ ONE'), item('해피포인트'), item('항공 마일리지')] }),
+    '개인 정보': () => ({ id: uid(), name: '개인 정보', icon: '🪪', color: COLORS[3],
+      items: [item('이름'), item('생년월일'), item('주민등록번호', true), item('휴대폰'), item('이메일'), item('주소')] }),
+    '인증서': () => ({ id: uid(), name: '인증서', icon: '📜', color: COLORS[4],
+      items: [item('공동인증서 비밀번호', true), item('금융인증서 PIN', true), item('간편인증 PIN', true)] }),
+  };
+  const ORDER = ['여권', '멤버쉽', '개인 정보', '인증서'];
+
+  const SAMPLE = () => ({ v: 3, groups: [accountGroup(), ...ORDER.map(n => DEFAULTS[n]())] });
 
   // ---------- 저장/불러오기 (이 기기 안에만 저장) ----------
   let data;
   try { data = JSON.parse(localStorage.getItem(KEY)) || SAMPLE(); } catch { data = SAMPLE(); }
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch {} };
 
-  // 예전 버전 데이터 정리: 비어 있는 '신분 정보'는 지우고 '계정 정보' 추가 (내용이 있으면 지우지 않음)
-  if (!data.v || data.v < 2) {
-    data.groups = data.groups.filter(g => !(g.name === '신분 정보' && g.items.every(i => !i.value)));
-    if (!data.groups.some(g => g.type === 'account')) data.groups.unshift(accountGroup());
-    data.v = 2;
+  // 예전 버전 데이터를 기본 5개 분류로 정리.
+  // 없어지는 분류(신분 정보·연락처·계좌)에 적어 둔 내용은 지우지 않고 '개인 정보'로 옮김.
+  if (!data.v || data.v < 3) {
+    const old = ['신분 정보', '연락처', '계좌'];
+    const moved = data.groups.filter(g => old.includes(g.name) && g.type !== 'account').flatMap(g => g.items.filter(i => i.value));
+    data.groups = data.groups.filter(g => !(old.includes(g.name) && g.type !== 'account'));
+
+    const acct = data.groups.find(g => g.type === 'account') || accountGroup();
+    const named = ORDER.map(n => data.groups.find(g => g.name === n && g.type !== 'account') || DEFAULTS[n]());
+    const personal = named[ORDER.indexOf('개인 정보')];
+    for (const m of moved) {
+      const slot = personal.items.find(i => i.key === m.key && !i.value);
+      if (slot) { slot.value = m.value; slot.secret = slot.secret || m.secret; }
+      else personal.items.push(m);
+    }
+    const rest = data.groups.filter(g => g !== acct && !named.includes(g));
+    data.groups = [acct, ...named, ...rest];
+    data.groups.forEach((g, i) => { g.color = COLORS[i % COLORS.length]; });
+    data.v = 3;
   }
   save();
 
@@ -580,7 +590,7 @@
         const d = JSON.parse(await f.text());
         if (!Array.isArray(d.groups)) throw 0;
         if (!confirm('현재 내용을 백업 파일 내용으로 바꿀까요?')) return;
-        data = d; save(); closePanel(); render(); toast('복원했어요');
+        data = d; save(); location.reload();
       } catch { toast('올바른 백업 파일이 아니에요'); }
     };
   }
