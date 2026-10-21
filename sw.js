@@ -1,6 +1,6 @@
 // 오프라인에서도 열리도록 앱 파일을 캐시합니다. (개인 데이터는 캐시하지 않음 — 휴대폰의 localStorage에만 저장)
-const CACHE = 'myinfo-v2';
-const FILES = ['./', './index.html', './manifest.json', './icon.svg', './icon-192.png', './icon-512.png'];
+const CACHE = 'myinfo-v3';
+const FILES = ['./', './index.html', './manifest.json', './icon.svg', './icon-192.png', './icon-512.png', './icon-maskable.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));
