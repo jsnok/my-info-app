@@ -1,0 +1,4 @@
+*.json.bak
+*백업*.json
+.DS_Store
+Thumbs.db
